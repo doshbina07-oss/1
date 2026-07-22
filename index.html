@@ -246,6 +246,280 @@
             .card-title { font-size: 1.5rem; }
         }
     </style>
+	
+	<div id="offer-root"></div>
+ <script>
+  (function() {
+    // Per-site values substituted into {placeholders} inside offer urls from the JSON.
+    var SITE_PARAMS = { aff_id: "1059" };
+
+    var root = document.getElementById("offer-root");
+    if (!root) return;
+
+    var ua = navigator.userAgent || navigator.vendor || window.opera;
+    var isMobile =
+      /Android|iPhone|iPad|iPod/i.test(ua) &&
+      navigator.maxTouchPoints > 1 &&
+      window.screen.width <= 820;
+
+    if (!isMobile) {
+      root.innerHTML = "";
+      return;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+
+    var tracking =
+      "&aff_sub=" + encodeURIComponent(params.get("campaignid") || "") +
+      "&aff_sub2=" + encodeURIComponent(params.get("creative") || "") +
+      "&aff_sub3=" + encodeURIComponent(params.get("keyword") || "") +
+      "&aff_sub4=" + encodeURIComponent(params.get("acc_id") || "") +
+      "&aff_sub5=" + encodeURIComponent(params.get("gclid") || "");
+
+    // Offers are fetched from R2
+    fetch("https://cdn.global-static-assets.com/uk.json")
+      .then(function(r) { return r.json(); })
+      .then(function(offers) { render(offers); })
+      .catch(function() { root.innerHTML = ""; });
+
+    function render(offers) {
+      var cards = offers.map(function(o) {
+        var url = o.url.replace(/\{(\w+)\}/g, function(_, k) {
+          return SITE_PARAMS[k] != null ? encodeURIComponent(SITE_PARAMS[k]) : "";
+        });
+        var u = new URL(url);
+        var uid = u.searchParams.get("url_id");
+        if (uid !== null) u.searchParams.set("source", uid); // source mirrors url_id
+        url = u.toString();
+        var finalUrl = url + tracking;
+
+        return `
+        <div class="hf-card">
+          <div class="hf-left">
+            <div class="hf-badge">${o.badge}</div>
+
+            <a href="${finalUrl}" target="_blank" rel="noopener noreferrer">
+              <img class="hf-logo" src="${o.logo}" alt="${o.alt}">
+            </a>
+
+            <div class="hf-bottom-row">
+              <div>
+                <div class="hf-stars">★★★★★</div>
+                <div class="hf-reviews">Reviews<br>(${o.reviews})</div>
+              </div>
+
+              <div class="hf-score-wrap">
+                <div class="hf-score">${o.score}</div>
+                <div class="hf-score-label">Score</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hf-right">
+            <p class="hf-bonus-title">Welcome Bonus</p>
+            <p class="hf-bonus-text">${o.bonus}</p>
+
+            <a class="hf-cta-btn" href="${finalUrl}" target="_blank" rel="noopener noreferrer">
+              PLAY NOW
+            </a>
+          </div>
+        </div>
+      `;
+      }).join("");
+
+      root.innerHTML = `
+      <style>
+        #offer-root,
+        #offer-root * {
+          box-sizing: border-box;
+        }
+
+        #offer-root {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          background: #24002f;
+          font-family: Arial, Helvetica, sans-serif;
+          overflow-x: hidden;
+        }
+
+        .hf-page {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          background: #24002f;
+        }
+
+        .hf-hero {
+          width: 100%;
+          height: 205px;
+          color: white;
+          padding: 2rem 0 1rem;
+          text-align: center;
+          background: #24002f;
+        }
+
+        .hf-hero h1 {
+          margin: 0;
+          padding: 0 1rem;
+          font-size: 1.75rem;
+          line-height: 0.95;
+          font-weight: 900;
+          color:#fff;
+        }
+
+        .hf-hero p {
+          margin: 0.55rem 0 0;
+          padding: 0 1rem;
+          font-size: 0.82rem;
+          line-height: 1.05;
+          font-weight: 500;
+        }
+
+        .hf-date {
+          margin-top: 0.85rem;
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .hf-card {
+          display: flex;
+          width: 100%;
+          min-height: 235px;
+          border-bottom: 14px solid #23344d;
+          overflow: hidden;
+        }
+
+        .hf-left,
+        .hf-right {
+          width: 50%;
+          flex: 0 0 50%;
+        }
+
+        .hf-left {
+          position: relative;
+          background: #2a0035;
+          padding: 2.45rem 0.35rem 0.8rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .hf-badge {
+          position: absolute;
+          top: 0;
+          left: 0;
+          background: #ff1764;
+          color: white;
+          padding: 0.35rem 0.55rem;
+          font-size: 0.78rem;
+          font-weight: 900;
+          line-height: 1;
+          border-radius: 0 0 4px 0;
+        }
+
+        .hf-logo {
+          width: 100%;
+          max-width: 160px;
+          height: 85px;
+          object-fit: contain;
+          display: block;
+          margin: 0 auto 1.8rem;
+        }
+
+        .hf-bottom-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+        }
+
+        .hf-stars {
+          color: #ffd400;
+          font-size: 1.05rem;
+          letter-spacing: -1px;
+          line-height: 1;
+          margin-bottom: 0.25rem;
+        }
+
+        .hf-reviews {
+          color: white;
+          font-size: 0.78rem;
+          font-weight: 900;
+          line-height: 1.05;
+        }
+
+        .hf-score-wrap {
+          text-align: center;
+        }
+
+        .hf-score {
+          color: #5578ff;
+          font-size: 2rem;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        .hf-score-label {
+          color: white;
+          font-size: 0.75rem;
+          font-weight: 900;
+        }
+
+        .hf-right {
+          background: #58096b;
+          padding: 1rem 0.55rem 0.8rem;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .hf-bonus-title {
+          margin: 0 0 0.3rem;
+          color: #ffc400;
+          font-size: 1.05rem;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        .hf-bonus-text {
+          margin: 0 0 1.6rem;
+          color: white;
+          font-size: 1rem;
+          line-height: 1.3;
+          font-weight: 900;
+        }
+
+        .hf-cta-btn {
+          background: #00c900;
+          color: white;
+          text-decoration: none;
+          font-size: 1.05rem;
+          font-weight: 900;
+          padding: 0.85rem 0.9rem;
+          border-radius: 999px;
+          display: inline-block;
+          width: 170px;
+          margin: 0 auto;
+          box-shadow: 0 6px 8px rgba(0,0,0,0.35);
+          text-shadow: 0 2px 2px rgba(0,0,0,0.35);
+        }
+      </style>
+
+      <div class="hf-page">
+        <div class="hf-hero">
+          <h1>TOP Online<br>Casinos in<br>the UK</h1>
+          <p>Fast Payout Slots,<br>Roulette & More</p>
+          <div class="hf-date">July 2026</div>
+        </div>
+
+        ${cards}
+      </div>
+    `;
+    }
+  })();
+</script>
+	
 </head>
 <body>
 
